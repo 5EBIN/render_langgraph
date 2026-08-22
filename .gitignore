@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+src/render_langgraph/web/
+node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+.render-langgraph/
+.pytest_cache/
+.env
+*.env.local

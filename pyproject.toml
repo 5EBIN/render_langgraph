@@ -1,0 +1,88 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "render-langgraph"
+version = "0.1.4"
+description = "Zero-config LangGraph graph visualizer"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = ["watchdog>=3.0"]
+keywords = [
+    "langgraph",
+    "langchain",
+    "visualization",
+    "graph",
+    "cli",
+    "agents",
+    "llm",
+    "developer-tools",
+]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/5EBIN/render_langgraph"
+Repository = "https://github.com/5EBIN/render_langgraph"
+Issues = "https://github.com/5EBIN/render_langgraph/issues"
+
+[project.scripts]
+render-langgraph = "render_langgraph.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.hatch.build]
+# web/ is gitignored build output (built by `cd frontend && npm run build`),
+# so hatchling's default VCS/.gitignore-based file selection drops it --
+# `artifacts` overrides that exclusion for both sdist and wheel. Without
+# this, `python -m build` builds the wheel from the sdist in an isolated
+# env, and that sdist never had web/ in it to begin with. With `artifacts`
+# alone, normal package traversal (packages=["src/render_langgraph"] below)
+# already picks web/ up at the right wheel-relative path -- no separate
+# force-include needed (and adding one collides: hatchling then tries to
+# write render_langgraph/web/index.html into the wheel twice).
+artifacts = ["src/render_langgraph/web/**"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/render_langgraph"]
+
+# The wheel (packages=[...] above) was already scoped to just the package --
+# it's the sdist that was wide open, since hatchling's default sdist
+# selection is "include everything under the project root not explicitly
+# excluded," which sweeps in examples/, tests/, frontend/ source,
+# HANDOFF.md, and even incidental non-project files like .claude/ (a
+# dev-tool session artifact that happened to be sitting in this directory,
+# never meant to be tracked or shipped). Switching to an explicit `include`
+# allowlist -- rather than trying to enumerate everything to exclude, which
+# is a losing game against future clutter -- means only what's actually
+# needed to install and run the tool (plus what's needed for the sdist
+# itself to remain a valid, rebuildable source distribution: pyproject.toml
+# and the readme/license it references) ever gets packaged.
+[tool.hatch.build.targets.sdist]
+# Leading "/" anchors to the project root -- without it, a bare
+# "pyproject.toml" pattern matches that filename anywhere in the tree,
+# which swept in examples/*/pyproject.toml too (each example is its own
+# mini-project with one, for the discovery/extraction test fixtures).
+include = [
+    "/src/render_langgraph",
+    "/pyproject.toml",
+    "/README.md",
+    "/LICENSE",
+]
+# hatchling includes a couple of files by default regardless of `include`
+# (.gitignore among them) -- exclude wins the conflict, so this is the only
+# way to actually drop them.
+exclude = [
+    "/.gitignore",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
